@@ -161,6 +161,15 @@ function Dashboard() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => setTagDialogOpen(true)}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add custom tag
+              </Button>
             </div>
           </div>
 
