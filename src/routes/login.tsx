@@ -37,18 +37,21 @@ function LoginPage() {
     setLoading(true);
 
     // Try to sign in; if the account doesn't exist yet, create it.
-    let { data, error } = await supabase.auth.signInWithPassword({
+    const signIn = await supabase.auth.signInWithPassword({
       email: ADMIN_EMAIL,
       password: ADMIN_PASSWORD,
     });
 
-    if (error) {
+    let userId = signIn.data.user?.id;
+
+    if (signIn.error || !signIn.data.session) {
       const signUp = await supabase.auth.signUp({
         email: ADMIN_EMAIL,
         password: ADMIN_PASSWORD,
       });
-      if (signUp.error || !signUp.data.session) {
-        // Retry sign-in (covers the case where the user exists but signUp returned no session)
+      if (signUp.data.session?.user) {
+        userId = signUp.data.user!.id;
+      } else {
         const retry = await supabase.auth.signInWithPassword({
           email: ADMIN_EMAIL,
           password: ADMIN_PASSWORD,
@@ -58,16 +61,14 @@ function LoginPage() {
           toast.error(retry.error?.message ?? signUp.error?.message ?? "Sign-in failed");
           return;
         }
-        data = retry.data;
-      } else {
-        data = signUp.data;
+        userId = retry.data.user.id;
       }
     }
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("onboarded")
-      .eq("id", data.user!.id)
+      .eq("id", userId!)
       .maybeSingle();
 
     setLoading(false);
