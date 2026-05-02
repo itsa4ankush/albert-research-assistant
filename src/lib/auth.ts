@@ -5,6 +5,8 @@ import type { UserRole } from "./types";
 
 export type ResearchContext = {
   topic?: string;
+  technology?: string;
+  industry?: string;
   background?: string;
   problem?: string;
   outcome?: string;
