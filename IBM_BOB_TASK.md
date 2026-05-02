@@ -64,6 +64,32 @@ Requirements:
 
 ---
 
+## 2c. Task 3 — "Talk with Albert" assistant panel
+
+Wire the prominent **"Talk with Albert!"** button on the dashboard (`src/routes/_authenticated/dashboard.tsx`) to a simple chat interface backed by IBM watsonx.
+
+Requirements:
+
+- Clicking the button opens a lightweight panel (modal, sheet, or slide-over) with a single text input and a send button — no multi-pane chrome.
+- The assistant answers questions **across the user's entire research database**, not a single paper. Use simple keyword + context matching over `paper.chunks`, titles, tags, keywords, and `researchRecord` fields (summary, methodology, approach, outcome, alignment) to assemble a small, relevant context window before calling watsonx.
+- The assistant can reason over the matched context to:
+  - answer factual questions about the user's papers,
+  - help draft or refine sections of a research report (intro, related work, synthesis), and
+  - suggest next steps based on what is already in the database.
+- Render the conversation inline (user turn + assistant turn). Keep history local to the session — no new tables, no persistence.
+- Reuse the existing `askWatsonx` server function (`src/server/watsonx.functions.ts`); add a thin wrapper if a different system prompt is needed for the cross-database assistant role.
+- Use design tokens from `src/styles.css`. The panel must visually match the coral CTA aesthetic of the trigger button.
+
+### Token discipline (applies to Task 1, 2, and 3)
+
+- **Every** watsonx call — column generation, per-paper Ask, and Albert — must be tuned for **minimum tokens / Bob coins** while preserving answer quality.
+- Cap `max_new_tokens` aggressively per call; prefer terse, formal, structured output.
+- Trim prompts: send only the smallest set of excerpts/fields needed (top-k via `pickRelevantChunks`), strip boilerplate, and avoid re-sending the full paper.
+- One round-trip per user action where possible — no speculative or chained calls.
+- System prompts should explicitly instruct watsonx to be brief, precise, and formal, and to omit filler.
+
+---
+
 ## 3. Out of scope for Bob
 
 - No schema migrations, no new database tables — `researchRecord` already lives on the `Paper` type and is persisted by the existing local store.
