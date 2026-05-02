@@ -6,7 +6,7 @@ import { PaperCard, PaperCardSkeleton } from "@/components/PaperCard";
 import { UploadPaperDialog } from "@/components/UploadPaperDialog";
 import { updatePaper } from "@/lib/store";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { X, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -165,25 +165,7 @@ function Dashboard() {
             </div>
           </div>
 
-          <div
-            key={tick}
-            className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          >
-            {visible.map((p) => (
-              <PaperCard
-                key={p.id}
-                paper={p}
-                onChange={() => setTick((t) => t + 1)}
-              />
-            ))}
-            {analyzingCount > 0 &&
-              visible.length === 0 &&
-              Array.from({ length: 3 }).map((_, i) => (
-                <PaperCardSkeleton key={`sk-${i}`} />
-              ))}
-          </div>
-
-          <section className="mt-14">
+          <section className="mt-10">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.18em] text-coral">
@@ -192,11 +174,22 @@ function Dashboard() {
                 <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
                   My research work database
                 </h2>
+                <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                  Each upload now creates a local research record row with blank fields,
+                  ready for future AI filling and manual comments or chapter tags.
+                </p>
               </div>
-              <p className="max-w-2xl text-sm text-muted-foreground">
-                Each upload now creates a local research record row with blank fields,
-                ready for future AI filling and manual comments or chapter tags.
-              </p>
+              <Button
+                size="lg"
+                className="gap-2 bg-coral text-accent-foreground shadow-soft hover:bg-coral/90"
+                onClick={() => {
+                  const first = papers[0];
+                  if (first) navigate({ to: "/papers/$paperId", params: { paperId: first.id } });
+                }}
+              >
+                <UserRound className="h-5 w-5" strokeWidth={2} />
+                Talk with Albert!
+              </Button>
             </div>
 
             <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card/40">
@@ -238,6 +231,25 @@ function Dashboard() {
               </Table>
             </div>
           </section>
+
+          <div
+            key={tick}
+            className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {visible.map((p) => (
+              <PaperCard
+                key={p.id}
+                paper={p}
+                onChange={() => setTick((t) => t + 1)}
+              />
+            ))}
+            {analyzingCount > 0 &&
+              visible.length === 0 &&
+              Array.from({ length: 3 }).map((_, i) => (
+                <PaperCardSkeleton key={`sk-${i}`} />
+              ))}
+          </div>
+
         </>
       )}
 
