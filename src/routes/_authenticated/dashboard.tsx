@@ -4,6 +4,7 @@ import { usePapers } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { PaperCard, PaperCardSkeleton } from "@/components/PaperCard";
 import { UploadPaperDialog } from "@/components/UploadPaperDialog";
+import { AddCustomTagDialog } from "@/components/AddCustomTagDialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -64,6 +65,7 @@ function Dashboard() {
   const { papers } = usePapers();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [tick, setTick] = useState(0);
   const [sort, setSort] = useState<SortKey>("relevance");
   const [tagFilter, setTagFilter] = useState<string>("all");
@@ -159,6 +161,15 @@ function Dashboard() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => setTagDialogOpen(true)}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add custom tag
+              </Button>
             </div>
           </div>
 
@@ -241,6 +252,11 @@ function Dashboard() {
       )}
 
       <UploadPaperDialog open={open} onOpenChange={setOpen} />
+      <AddCustomTagDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        papers={papers}
+      />
     </main>
   );
 }
