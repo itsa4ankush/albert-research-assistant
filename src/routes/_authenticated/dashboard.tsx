@@ -229,9 +229,7 @@ function Dashboard() {
                         <TableCell>{blankValue(row.relevanceScore)}</TableCell>
                         <TableCell>{blankValue(row.comments)}</TableCell>
                         <TableCell>
-                          {row.customTags.length > 0
-                            ? row.customTags.join(", ")
-                            : blankValue("")}
+                          <CustomTagsCell paper={paper} tags={row.customTags} />
                         </TableCell>
                       </TableRow>
                     );
