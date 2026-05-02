@@ -34,6 +34,8 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
 
   const topic = profile?.research_context?.topic?.trim();
+  const technology = profile?.research_context?.technology?.trim();
+  const industry = profile?.research_context?.industry?.trim();
   const roleLabel = profile?.role ? ROLE_LABELS[profile.role] : null;
   const displayName =
     profile?.display_name || user?.email?.split("@")[0] || "Researcher";
@@ -70,21 +72,43 @@ export function AppSidebar() {
                 {roleLabel && (
                   <p className="text-xs text-muted-foreground">{roleLabel}</p>
                 )}
-                <div className="mt-3 rounded-lg border border-border bg-paper-deep/40 p-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                    Research topic
-                  </p>
-                  <p className="mt-1 line-clamp-3 text-xs text-foreground/90">
-                    {topic || (
-                      <span className="text-muted-foreground italic">
-                        Not set yet —{" "}
-                        <Link to="/research-context" className="underline">
-                          add one
-                        </Link>
-                        .
-                      </span>
-                    )}
-                  </p>
+                <div className="mt-3 space-y-3 rounded-lg border border-border bg-paper-deep/40 p-3">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                      Research topic
+                    </p>
+                    <p className="mt-1 line-clamp-3 text-xs text-foreground/90">
+                      {topic || (
+                        <span className="text-muted-foreground italic">
+                          Not set yet —{" "}
+                          <Link to="/research-context" className="underline">
+                            add one
+                          </Link>
+                          .
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  {technology && (
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                        Technology
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs text-foreground/90">
+                        {technology}
+                      </p>
+                    </div>
+                  )}
+                  {industry && (
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                        Industry
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs text-foreground/90">
+                        {industry}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </SidebarGroupContent>
