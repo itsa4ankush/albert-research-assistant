@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useAuth, type ResearchContext } from "@/lib/auth";
+import { isDemoUser, saveDemoProfile, useAuth, type ResearchContext } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,17 @@ function OnboardingPage() {
       return;
     }
     setSaving(true);
+    if (isDemoUser(user)) {
+      saveDemoProfile({
+        display_name: name.trim(),
+        research_context: ctx,
+        onboarded: true,
+      });
+      setSaving(false);
+      await refreshProfile();
+      navigate({ to: "/dashboard" });
+      return;
+    }
     const { error } = await supabase
       .from("profiles")
       .update({

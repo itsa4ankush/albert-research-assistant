@@ -1,14 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { ADMIN_EMAIL, ADMIN_PASSWORD, signInDemo } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, LogIn } from "lucide-react";
-
-const ADMIN_EMAIL = "admin@albert.com";
-const ADMIN_PASSWORD = "admin";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -35,42 +32,7 @@ function LoginPage() {
     }
 
     setLoading(true);
-
-    // Try to sign in; if the account doesn't exist yet, create it.
-    const signIn = await supabase.auth.signInWithPassword({
-      email: ADMIN_EMAIL,
-      password: ADMIN_PASSWORD,
-    });
-
-    let userId = signIn.data.user?.id;
-
-    if (signIn.error || !signIn.data.session) {
-      const signUp = await supabase.auth.signUp({
-        email: ADMIN_EMAIL,
-        password: ADMIN_PASSWORD,
-      });
-      if (signUp.data.session?.user) {
-        userId = signUp.data.user!.id;
-      } else {
-        const retry = await supabase.auth.signInWithPassword({
-          email: ADMIN_EMAIL,
-          password: ADMIN_PASSWORD,
-        });
-        if (retry.error || !retry.data.session) {
-          setLoading(false);
-          toast.error(retry.error?.message ?? signUp.error?.message ?? "Sign-in failed");
-          return;
-        }
-        userId = retry.data.user.id;
-      }
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarded")
-      .eq("id", userId!)
-      .maybeSingle();
-
+    const profile = signInDemo();
     setLoading(false);
     navigate({ to: profile?.onboarded ? "/dashboard" : "/onboarding" });
   };

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useAuth, type ResearchContext } from "@/lib/auth";
+import { isDemoUser, saveDemoProfile, useAuth, type ResearchContext } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,14 @@ function ResearchContextPage() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
+    if (isDemoUser(user)) {
+      saveDemoProfile({ research_context: ctx });
+      setSaving(false);
+      await refreshProfile();
+      toast.success("Research context saved.");
+      navigate({ to: "/dashboard" });
+      return;
+    }
     const { error } = await supabase
       .from("profiles")
       .update({ research_context: ctx })
