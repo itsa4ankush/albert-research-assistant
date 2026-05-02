@@ -4,7 +4,9 @@ import { usePapers } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { PaperCard, PaperCardSkeleton } from "@/components/PaperCard";
 import { UploadPaperDialog } from "@/components/UploadPaperDialog";
-import { AddCustomTagDialog } from "@/components/AddCustomTagDialog";
+import { updatePaper } from "@/lib/store";
+import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
