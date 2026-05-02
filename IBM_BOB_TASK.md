@@ -64,7 +64,7 @@ Requirements:
 
 ---
 
-## 2c. Task 3 — "Talk with Albert" assistant panel
+### Task 3 — "Talk with Albert" assistant panel
 
 Wire the prominent **"Talk with Albert!"** button on the dashboard (`src/routes/_authenticated/dashboard.tsx`) to a simple chat interface backed by IBM watsonx.
 
