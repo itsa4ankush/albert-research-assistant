@@ -4,6 +4,7 @@ import { parsePdf, chunkText } from "@/lib/pdf";
 import { savePaper, updatePaper } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { analyzePaper, fetchPaperFromUrl } from "@/server/watsonx.functions";
+import type { ResearchDatabaseRow } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Link2, FileUp } from "lucide-react";
 import { toast } from "sonner";
+
+function createBlankResearchRecord(title: string): ResearchDatabaseRow {
+  return {
+    paperTitle: title,
+    summary: "",
+    methodologySummary: "",
+    researchApproach: "",
+    outcome: "",
+    researchAlignment: "",
+    relevanceScore: null,
+    comments: "",
+    customTags: [],
+  };
+}
 
 export function UploadPaperDialog({
   open,
@@ -78,6 +93,7 @@ export function UploadPaperDialog({
         fullText: parsed.fullText,
         chunks: parsed.chunks,
         analyzing: true,
+        researchRecord: createBlankResearchRecord(parsed.inferredTitle),
       });
       toast.success(`Added "${parsed.inferredTitle.slice(0, 40)}…"`);
       onOpenChange(false);
@@ -134,6 +150,7 @@ export function UploadPaperDialog({
         fullText,
         chunks,
         analyzing: true,
+        researchRecord: createBlankResearchRecord(result.title),
       });
       toast.success(`Added "${result.title.slice(0, 40)}…"`);
       setUrl("");
