@@ -12,6 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { Paper, ResearchDatabaseRow } from "@/lib/types";
 import { Plus, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -25,6 +34,30 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 type SortKey = "relevance" | "date" | "tag";
+
+function getResearchRow(paper: Paper): ResearchDatabaseRow {
+  return (
+    paper.researchRecord ?? {
+      paperTitle: paper.title,
+      summary: "",
+      methodologySummary: "",
+      researchApproach: "",
+      outcome: "",
+      researchAlignment: "",
+      relevanceScore: null,
+      comments: "",
+      customTags: [],
+    }
+  );
+}
+
+function blankValue(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") {
+    return <span className="text-muted-foreground">—</span>;
+  }
+
+  return value;
+}
 
 function Dashboard() {
   const { profile, hydrated, profileLoading } = useAuth();
@@ -140,14 +173,70 @@ function Dashboard() {
                 onChange={() => setTick((t) => t + 1)}
               />
             ))}
-            {/* If we're analyzing but the user has no analyzed papers yet,
-                show extra skeletons as a loading hint. */}
             {analyzingCount > 0 &&
               visible.length === 0 &&
               Array.from({ length: 3 }).map((_, i) => (
                 <PaperCardSkeleton key={`sk-${i}`} />
               ))}
           </div>
+
+          <section className="mt-14">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.18em] text-coral">
+                  Research database
+                </p>
+                <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
+                  Blank report rows for every uploaded paper.
+                </h2>
+              </div>
+              <p className="max-w-2xl text-sm text-muted-foreground">
+                Each upload now creates a local research record row with blank fields,
+                ready for future AI filling and manual comments or chapter tags.
+              </p>
+            </div>
+
+            <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card/40">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[220px]">Paper title</TableHead>
+                    <TableHead className="min-w-[220px]">Summary</TableHead>
+                    <TableHead className="min-w-[220px]">Methodology summary</TableHead>
+                    <TableHead className="min-w-[220px]">Research approach</TableHead>
+                    <TableHead className="min-w-[220px]">Outcome</TableHead>
+                    <TableHead className="min-w-[220px]">Research alignment</TableHead>
+                    <TableHead className="min-w-[120px]">Relevance score</TableHead>
+                    <TableHead className="min-w-[220px]">Comments</TableHead>
+                    <TableHead className="min-w-[180px]">Tags</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {papers.map((paper) => {
+                    const row = getResearchRow(paper);
+
+                    return (
+                      <TableRow key={`research-row-${paper.id}`}>
+                        <TableCell className="font-medium">{row.paperTitle}</TableCell>
+                        <TableCell>{blankValue(row.summary)}</TableCell>
+                        <TableCell>{blankValue(row.methodologySummary)}</TableCell>
+                        <TableCell>{blankValue(row.researchApproach)}</TableCell>
+                        <TableCell>{blankValue(row.outcome)}</TableCell>
+                        <TableCell>{blankValue(row.researchAlignment)}</TableCell>
+                        <TableCell>{blankValue(row.relevanceScore)}</TableCell>
+                        <TableCell>{blankValue(row.comments)}</TableCell>
+                        <TableCell>
+                          {row.customTags.length > 0
+                            ? row.customTags.join(", ")
+                            : blankValue("")}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </section>
         </>
       )}
 
