@@ -252,6 +252,11 @@ function Dashboard() {
       )}
 
       <UploadPaperDialog open={open} onOpenChange={setOpen} />
+      <AddCustomTagDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        papers={papers}
+      />
     </main>
   );
 }
