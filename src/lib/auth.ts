@@ -116,25 +116,69 @@ export function useAuth() {
 
   // CRITICAL: subscribe BEFORE getSession()
   useEffect(() => {
+    const loadDemo = () => {
+      const demoSession = readDemoSession();
+      if (!demoSession) return false;
+      setSession(demoSession);
+      setUser(demoSession.user);
+      setProfile(getDemoProfile());
+      setDemoMode(true);
+      return true;
+    };
+
+    if (loadDemo()) {
+      setHydrated(true);
+    }
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      if (readDemoSession()) return;
       setSession(sess);
       setUser(sess?.user ?? null);
       if (!sess) setProfile(null);
+      setDemoMode(false);
     });
 
     supabase.auth.getSession().then(({ data }) => {
+      if (readDemoSession()) {
+        setHydrated(true);
+        return;
+      }
       setSession(data.session);
       setUser(data.session?.user ?? null);
+      setDemoMode(false);
       setHydrated(true);
     });
 
-    return () => sub.subscription.unsubscribe();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === DEMO_SESSION_KEY) {
+        if (!loadDemo()) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setDemoMode(false);
+        }
+      }
+      if (e.key === DEMO_PROFILE_KEY && readDemoSession()) {
+        setProfile(getDemoProfile());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   // Fetch profile when user changes
   useEffect(() => {
     if (!user) {
       setProfile(null);
+      return;
+    }
+    if (demoMode || isDemoUser(user)) {
+      setProfile(getDemoProfile());
+      setProfileLoading(false);
       return;
     }
     let cancelled = false;
@@ -152,10 +196,15 @@ export function useAuth() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, demoMode]);
 
   const refreshProfile = useCallback(async () => {
     if (!user) return null;
+    if (demoMode || isDemoUser(user)) {
+      const demoProfile = getDemoProfile();
+      setProfile(demoProfile);
+      return demoProfile;
+    }
     const { data } = await supabase
       .from("profiles")
       .select("id, email, display_name, role, interests, onboarded, research_context")
@@ -163,9 +212,10 @@ export function useAuth() {
       .maybeSingle();
     setProfile((data as Profile | null) ?? null);
     return (data as Profile | null) ?? null;
-  }, [user]);
+  }, [user, demoMode]);
 
   const signOut = useCallback(async () => {
+    clearDemoAuth();
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
