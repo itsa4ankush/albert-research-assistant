@@ -6,7 +6,7 @@ import { PaperCard, PaperCardSkeleton } from "@/components/PaperCard";
 import { UploadPaperDialog } from "@/components/UploadPaperDialog";
 import { updatePaper } from "@/lib/store";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { X, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
