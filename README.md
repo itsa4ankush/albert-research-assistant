@@ -64,6 +64,73 @@ Out of scope for now:
 - Streaming chat responses.
 - Collaboration and shared workspaces.
 
+## What has been built — process workflow
+
+The current build covers the end-to-end flow from sign-in to a structured,
+taggable research database. Step by step:
+
+1. **Sign in (passwordless).**
+   The user lands on the marketing page and signs in via email OTP
+   (Supabase Auth). No passwords, no Google OAuth required.
+
+2. **Onboarding — capture the research brief.**
+   First-time users are routed to `/onboarding` and fill in a short brief:
+   display name, thesis or research topic, technology, industry,
+   background, problem being solved, expected outcome, and any other
+   comments. The brief is stored in the `profiles.research_context` JSONB
+   column. Returning users skip this step automatically.
+
+3. **Library dashboard.**
+   After onboarding the user lands on `/dashboard`, which shows their
+   paper library as a card grid with skeleton loading states, an
+   empty-state CTA, and tag filters.
+
+4. **Add a paper — URL or PDF.**
+   The "Add paper" dialog has two tabs:
+   - **Paste a URL** — a server function fetches the page, detects PDF
+     vs HTML, and returns clean text.
+   - **Upload a PDF** — parsed in-browser with `pdfjs-dist`, chunked,
+     and never sent unprocessed.
+   Each new upload also creates a blank row in the local research
+   database (see step 6).
+
+5. **AI relevance scoring.**
+   Once text is extracted, `analyzePaper` calls IBM watsonx
+   (`ibm/granite-3-8b-instruct`) with the paper text and the user's
+   research brief. It returns a relevance score (0–100), topical tags,
+   and a plain-language excerpt, which are attached to the paper and
+   shown on its card.
+
+6. **Research database row per paper.**
+   Every uploaded paper gets a structured row with fields for: title,
+   summary, methodology summary, research approach, outcome, research
+   alignment, relevance score, user comments, and custom tags. The
+   dashboard renders this as a table beneath the library grid so the
+   user can see all papers' metadata at a glance. Columns are
+   pre-created and ready for AI extraction or manual edits.
+
+7. **Inline custom tagging.**
+   The last column of each row is an inline tag editor. The user can
+   add custom tags such as "Review of literature", "Hypothesis
+   framework", "Results discussion", "Methodology", "Background", or
+   "Idea" — useful for mapping each paper to a chapter or section of
+   the final write-up. Tags can be removed individually.
+
+8. **Paper detail and grounded chat.**
+   Clicking a card opens `/papers/$paperId`, which shows the paper
+   metadata and a chat panel. `askWatsonx` retrieves the most relevant
+   chunks (keyword overlap) and answers questions with `[1]`, `[2]`
+   style citations pointing back to those chunks — no hallucinated
+   references.
+
+9. **Edit research context any time.**
+   The sidebar exposes "Edit context", which routes to
+   `/research-context` so the user can update the brief; subsequent
+   analyses and chats use the new context.
+
+10. **Sign out.**
+    Available from the sidebar; clears the Supabase session.
+
 ## Tech stack
 
 - **Framework:** TanStack Start v1 (React 19, file-based routing,
