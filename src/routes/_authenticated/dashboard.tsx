@@ -190,7 +190,7 @@ function Dashboard() {
                   Research database
                 </p>
                 <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-                  Blank report rows for every uploaded paper.
+                  My research work database
                 </h2>
               </div>
               <p className="max-w-2xl text-sm text-muted-foreground">
