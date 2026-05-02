@@ -108,19 +108,20 @@ export const analyzePaper = createServerFn({ method: "POST" })
       "PAPER TEXT (truncated):",
       data.text.slice(0, 12000),
       "",
-      'Respond with ONLY a JSON object, no prose, matching: {"relevance": <integer 0-100>, "tags": [<3-5 short topic tags, lowercase, kebab-case>], "excerpt": "<1-2 sentence plain-language summary, max 220 chars>"}.',
+      'Respond with ONLY a JSON object, no prose, matching: {"relevance": <integer 0-100>, "tags": [<3-5 short topic tags, lowercase, kebab-case>], "excerpt": "<1-2 sentence plain-language summary, max 220 chars>", "keywords": [<6-12 short keywords or noun-phrases, lowercase, that BOTH appear-in-or-paraphrase the paper AND match the researcher\'s topic/background/problem/outcome above; these will be used as retrieval keywords for RAG, so prefer specific technical terms over generic words>]}.',
     ].join("\n");
 
     try {
-      const { text } = await generateText(prompt, { max_new_tokens: 350, temperature: 0.1 });
+      const { text } = await generateText(prompt, { max_new_tokens: 450, temperature: 0.1 });
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) {
-        return { relevance: 50, tags: [] as string[], excerpt: data.text.slice(0, 200), error: null as string | null };
+        return { relevance: 50, tags: [] as string[], excerpt: data.text.slice(0, 200), keywords: [] as string[], error: null as string | null };
       }
       const parsed = JSON.parse(match[0]) as {
         relevance?: number;
         tags?: string[];
         excerpt?: string;
+        keywords?: string[];
       };
       return {
         relevance: Math.max(0, Math.min(100, Math.round(Number(parsed.relevance ?? 50)))),
@@ -128,12 +129,22 @@ export const analyzePaper = createServerFn({ method: "POST" })
           ? parsed.tags.slice(0, 6).map((t) => String(t).toLowerCase())
           : [],
         excerpt: String(parsed.excerpt ?? "").slice(0, 280),
+        keywords: Array.isArray(parsed.keywords)
+          ? Array.from(
+              new Set(
+                parsed.keywords
+                  .slice(0, 16)
+                  .map((k) => String(k).toLowerCase().trim())
+                  .filter((k) => k.length > 1 && k.length <= 60)
+              )
+            )
+          : [],
         error: null as string | null,
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("analyzePaper failed:", err);
-      return { relevance: 50, tags: [] as string[], excerpt: data.text.slice(0, 200), error: message };
+      return { relevance: 50, tags: [] as string[], excerpt: data.text.slice(0, 200), keywords: [] as string[], error: message };
     }
   });
 

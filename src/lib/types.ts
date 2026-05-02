@@ -32,6 +32,12 @@ export type Paper = {
   tags?: string[];
   relevanceScore?: number; // 0–100
   excerpt?: string;
+  /**
+   * Keywords extracted from the paper that match the user's research
+   * topic/context. Lowercased, short phrases — designed to be fed into a
+   * keyword index or hybrid RAG retriever later on.
+   */
+  keywords?: string[];
   analyzing?: boolean;
   sourceUrl?: string;
 };

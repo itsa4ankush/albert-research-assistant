@@ -47,6 +47,7 @@ export function UploadPaperDialog({
         relevanceScore: result.relevance,
         tags: result.tags,
         excerpt: result.excerpt,
+        keywords: result.keywords,
         analyzing: false,
       });
     } catch (err) {
