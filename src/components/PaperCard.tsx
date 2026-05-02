@@ -77,6 +77,19 @@ export function PaperCard({
         </div>
       )}
 
+      {paper.keywords && paper.keywords.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5" title="Keywords matched to your research context">
+          {paper.keywords.slice(0, 6).map((k) => (
+            <span
+              key={k}
+              className="rounded-md bg-coral/15 px-1.5 py-0.5 text-[11px] font-medium text-foreground/80"
+            >
+              {k}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="mt-auto flex items-center justify-between pt-5 text-xs">
         <span className="font-mono truncate text-muted-foreground">
           {paper.filename}
