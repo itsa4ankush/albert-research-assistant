@@ -180,7 +180,7 @@ function Dashboard() {
                 </p>
               </div>
               <Button
-                className="group h-14 gap-3 rounded-xl bg-coral px-8 text-lg font-semibold text-accent-foreground shadow-soft transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-coral hover:shadow-[0_12px_32px_-8px_hsl(var(--coral)/0.6),0_0_0_4px_hsl(var(--coral)/0.15)] focus-visible:-translate-y-1 focus-visible:shadow-[0_12px_32px_-8px_hsl(var(--coral)/0.6),0_0_0_4px_hsl(var(--coral)/0.25)] active:translate-y-0"
+                className="group h-14 gap-3 rounded-xl bg-coral px-8 text-lg font-semibold text-accent-foreground shadow-soft transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-coral hover:shadow-[0_14px_36px_-10px_var(--coral),0_0_0_4px_color-mix(in_oklab,var(--coral)_25%,transparent)] focus-visible:-translate-y-1 focus-visible:shadow-[0_14px_36px_-10px_var(--coral),0_0_0_4px_color-mix(in_oklab,var(--coral)_35%,transparent)] active:translate-y-0"
                 onClick={() => {
                   const first = papers[0];
                   if (first) navigate({ to: "/papers/$paperId", params: { paperId: first.id } });
