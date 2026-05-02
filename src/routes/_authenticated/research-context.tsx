@@ -65,6 +65,8 @@ function ResearchContextPage() {
 
       <div className="mt-8 space-y-5">
         <Field label="Thesis or research topic" value={ctx.topic ?? ""} onChange={(v) => setCtx((c) => ({ ...c, topic: v }))} />
+        <Field label="Technology" value={ctx.technology ?? ""} onChange={(v) => setCtx((c) => ({ ...c, technology: v }))} />
+        <Field label="Industry" value={ctx.industry ?? ""} onChange={(v) => setCtx((c) => ({ ...c, industry: v }))} />
         <Field label="Context / background" value={ctx.background ?? ""} onChange={(v) => setCtx((c) => ({ ...c, background: v }))} />
         <Field label="Problem you're solving" value={ctx.problem ?? ""} onChange={(v) => setCtx((c) => ({ ...c, problem: v }))} />
         <Field label="Expected outcome" value={ctx.outcome ?? ""} onChange={(v) => setCtx((c) => ({ ...c, outcome: v }))} />
