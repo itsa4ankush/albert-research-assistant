@@ -20,6 +20,18 @@ export type Session = {
   role?: UserRole;
 };
 
+export type ResearchDatabaseRow = {
+  paperTitle: string;
+  summary: string;
+  methodologySummary: string;
+  researchApproach: string;
+  outcome: string;
+  researchAlignment: string;
+  relevanceScore: number | null;
+  comments: string;
+  customTags: string[];
+};
+
 export type Paper = {
   id: string;
   title: string;
@@ -40,6 +52,7 @@ export type Paper = {
   keywords?: string[];
   analyzing?: boolean;
   sourceUrl?: string;
+  researchRecord?: ResearchDatabaseRow;
 };
 
 export type ChatMessage = {
