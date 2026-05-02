@@ -1,241 +1,136 @@
 # Albert — Research Alignment Engine
 
-> Semantic alignment of research literature to user-defined objectives, with grounded question answering powered by **IBM watsonx**.
+## Context
 
-Albert is a research alignment engine that helps students, PhD candidates, product managers, and researchers cut through literature noise. Drop in a paper (PDF or URL), and Albert scores it against your stated research objectives, surfaces relevance reasoning, and lets you ask grounded questions whose answers cite the actual excerpts they came from.
+Researchers, PhD candidates, students, and product managers routinely face an
+overwhelming volume of academic literature. Reading every paper end-to-end to
+decide whether it is relevant to a specific research objective is slow,
+repetitive, and error-prone. Most existing tools either summarize papers in
+isolation or provide generic chat over PDFs — neither approach connects a
+paper back to the user's own research brief.
 
----
+Albert is a research alignment engine that closes this gap. A user defines
+their research context once (topic, background, problem, expected outcome),
+then drops in papers as PDFs or URLs. Albert scores each paper against that
+brief, surfaces the reasoning behind the score, extracts structured metadata,
+and lets the user ask grounded questions whose answers cite the actual
+excerpts they came from.
 
-## ✨ Features
+## Problem
 
-- **🔐 Passwordless authentication** — email OTP sign-in via Lovable Cloud (Supabase Auth). No passwords to manage.
-- **🧭 Onboarding research brief** — capture topic, background, problem, expected outcome, and other notes once. Albert uses this context for every downstream task.
-- **📥 Paper ingestion** — two paths:
-  - **Paste a URL** — server fetches HTML or PDF, extracts clean text.
-  - **Upload a PDF** — parsed in-browser with `pdfjs-dist`, never leaves your session unprocessed.
-- **🎯 Relevance scoring (0–100)** — IBM watsonx (Granite) scores each paper against your research brief and assigns topical tags + a plain-language excerpt.
-- **💬 Grounded chat** — ask anything about a paper. Albert retrieves the most relevant chunks (keyword overlap) and answers with `[1]`, `[2]` style citations to those chunks. No hallucinated references.
-- **🗂 Library dashboard** — sortable/filterable card grid, skeleton loading states, empty-state CTA, tag filters.
-- **🧱 Persistent research context** — edit your brief any time from the sidebar; returning users skip onboarding automatically.
-- **📱 Responsive sidebar shell** — collapsible nav (Library, Chat, Edit context, Sign out) with the user's role and topic always visible.
+Literature review today suffers from three concrete problems:
 
----
+1. **Relevance is opaque.** A paper's abstract rarely tells you whether it
+   fits *your* specific research question. Researchers waste hours reading
+   papers that turn out to be tangential.
+2. **Notes live everywhere.** Summaries, methodology notes, tags, and
+   chapter assignments are scattered across PDFs, sticky notes, and
+   spreadsheets. There is no single structured record per paper.
+3. **AI answers cannot be trusted without grounding.** Generic chat-with-PDF
+   tools hallucinate citations and conflate sources. Researchers need
+   answers tied back to specific passages they can verify.
 
-## 🧰 Tech stack
+Albert addresses all three: per-paper relevance scoring against a stated
+brief, a structured research database row per paper, and grounded chat with
+citations to the underlying chunks.
 
-| Layer | Choice |
-|---|---|
-| Framework | [TanStack Start](https://tanstack.com/start) (React 19, file-based routing, server functions) |
-| Build | Vite 7 |
-| Styling | Tailwind CSS v4 + shadcn/ui + semantic design tokens (oklch) |
-| Backend | **Lovable Cloud** (managed Supabase: Postgres, Auth, RLS) |
-| AI | **IBM watsonx** — `ibm/granite-3-8b-instruct` via the watsonx Text Generation API |
-| PDF parsing | `pdfjs-dist` (browser) + server-side PDF/HTML fetch |
-| Deployment target | Cloudflare Workers (edge SSR) |
-| Language | TypeScript (strict) |
+## Scope
 
----
+In scope for the current version:
 
-## 🏗 Architecture
+- Passwordless email OTP authentication.
+- One-time onboarding to capture the user's research brief
+  (topic, technology, industry, background, problem, expected outcome).
+- Paper ingestion via URL (server fetches HTML or PDF) or direct PDF upload
+  (parsed in-browser).
+- AI relevance scoring (0–100) with tags and a plain-language excerpt,
+  scored against the user's brief.
+- A structured research database row per paper with fields for title,
+  summary, methodology summary, research approach, outcome, research
+  alignment, relevance score, user comments, and custom tags.
+- Inline custom tagging on each row (e.g. "Review of literature",
+  "Hypothesis framework", "Results discussion").
+- Grounded chat with `[n]` citations to retrieved chunks.
+- Library dashboard with filtering, sorting, and tag filters.
+- Editable research context from the sidebar.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Browser (React 19 + TanStack Router)                           │
-│  • PDF parsing (pdfjs-dist) • localStorage paper cache          │
-│  • Sidebar shell + protected /_authenticated routes             │
-└────────────┬───────────────────────────────────┬────────────────┘
-             │ createServerFn RPC                │ supabase-js
-             ▼                                   ▼
-┌──────────────────────────────┐   ┌───────────────────────────────┐
-│  Server functions (Worker)   │   │  Lovable Cloud (Supabase)     │
-│  • askWatsonx                │   │  • Auth (email OTP)           │
-│  • analyzePaper              │   │  • profiles table             │
-│  • fetchPaperFromUrl         │   │    └ research_context (jsonb) │
-│  • IAM token cache           │   │  • RLS policies               │
-└────────────┬─────────────────┘   └───────────────────────────────┘
-             │ Bearer (IAM)
-             ▼
-┌──────────────────────────────┐
-│  IBM watsonx                 │
-│  granite-3-8b-instruct       │
-└──────────────────────────────┘
-```
+Out of scope for now:
 
-### Project layout
+- Vector embeddings and semantic retrieval (currently keyword overlap).
+- Cross-paper or multi-paper chat.
+- Server-side persistence of papers (currently localStorage).
+- Page-level citations with an inline PDF viewer.
+- Shareable read-only library links.
+- Streaming chat responses.
+- Collaboration and shared workspaces.
+
+## Tech stack
+
+- **Framework:** TanStack Start v1 (React 19, file-based routing,
+  server functions)
+- **Build tool:** Vite 7
+- **Language:** TypeScript (strict mode)
+- **Styling:** Tailwind CSS v4 with semantic design tokens (oklch)
+- **UI primitives:** shadcn/ui on top of Radix UI
+- **Backend:** Lovable Cloud (managed Supabase — Postgres, Auth, Row Level
+  Security)
+- **Authentication:** Supabase Auth, email OTP (passwordless)
+- **AI model:** IBM watsonx, `ibm/granite-3-8b-instruct` via the watsonx
+  Text Generation API
+- **PDF parsing:** pdfjs-dist in the browser, plus server-side fetch for
+  URL-based ingestion
+- **Local persistence:** localStorage paper store
+- **Deployment target:** Cloudflare Workers (edge SSR)
+
+## Project layout
 
 ```
 src/
-├── routes/
-│   ├── __root.tsx                       # SSR shell + providers
-│   ├── index.tsx                        # Landing (role picker + hero)
-│   ├── login.tsx                        # Email OTP sign-in
-│   ├── _authenticated.tsx               # Sidebar layout + auth guard
-│   └── _authenticated/
-│       ├── onboarding.tsx               # 4-step research brief
-│       ├── dashboard.tsx                # Paper library
-│       ├── papers.$paperId.tsx          # Paper detail + ChatBox
-│       └── research-context.tsx         # Edit research brief
-├── server/
-│   ├── watsonx.server.ts                # IAM token cache + raw watsonx call
-│   └── watsonx.functions.ts             # askWatsonx, analyzePaper, fetchPaperFromUrl
-├── components/
-│   ├── AppSidebar.tsx                   # Collapsible left nav
-│   ├── Navbar.tsx                       # Public-route navbar
-│   ├── PaperCard.tsx                    # Library card (relevance badge, tags)
-│   ├── UploadPaperDialog.tsx            # URL / PDF upload tabs
-│   ├── ChatBox.tsx                      # Grounded chat UI
-│   └── ui/*                             # shadcn/ui primitives
-├── lib/
-│   ├── auth.ts                          # Auth helpers + ResearchContext type
-│   ├── store.ts                         # localStorage paper store
-│   ├── pdf.ts                           # pdfjs-dist text extraction + chunking
-│   └── types.ts                         # Paper, Session, UserRole
-├── integrations/supabase/               # Auto-generated client + types
-└── styles.css                           # Tailwind v4 + design tokens (oklch)
+  routes/                       File-based routes (TanStack Start)
+    __root.tsx                  SSR shell and providers
+    index.tsx                   Landing page
+    login.tsx                   Email OTP sign-in
+    _authenticated.tsx          Sidebar layout and auth guard
+    _authenticated/
+      onboarding.tsx            Research brief capture
+      dashboard.tsx             Library and research database
+      papers.$paperId.tsx       Paper detail and chat
+      research-context.tsx      Edit research brief
+  server/
+    watsonx.server.ts           IAM token cache and raw watsonx call
+    watsonx.functions.ts        askWatsonx, analyzePaper, fetchPaperFromUrl
+  components/                   AppSidebar, PaperCard, UploadPaperDialog,
+                                ChatBox, and shadcn/ui primitives
+  lib/                          auth, store, pdf, types, utils
+  integrations/supabase/        Auto-generated client and types
+  styles.css                    Tailwind v4 and design tokens
 
-supabase/migrations/                     # profiles table + research_context column
+supabase/migrations/            Profiles table and research_context column
 ```
 
----
+## Environment variables
 
-## 🚀 Getting started
+Server-only secrets (never prefixed with `VITE_`):
 
-### Prerequisites
+- `WATSONX_API_KEY` — IBM Cloud IAM API key
+- `WATSONX_PROJECT_ID` — watsonx project ID
+- `WATSONX_REGION` — optional, defaults to `us-south`
 
-- [Bun](https://bun.sh) (or Node 20+)
-- An **IBM Cloud** account with a [watsonx.ai](https://www.ibm.com/products/watsonx-ai) project
-  - `WATSONX_API_KEY` — IAM API key
-  - `WATSONX_PROJECT_ID` — your watsonx project ID
-- (Lovable users) Lovable Cloud is enabled automatically — no Supabase setup needed.
-- (Self-hosting) A Supabase project (URL + anon key + service role)
+Client-safe variables (auto-managed by Lovable Cloud):
 
-### 1. Clone & install
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_SUPABASE_PROJECT_ID`
 
-```bash
-git clone <your-repo-url>
-cd albert
+## Getting started
+
+```
 bun install
-```
-
-### 2. Environment variables
-
-Lovable Cloud auto-populates `.env` with Supabase credentials. For self-hosted setups create `.env`:
-
-```bash
-# Supabase / Lovable Cloud (auto-managed in Lovable)
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<anon-key>
-VITE_SUPABASE_PROJECT_ID=<project-ref>
-
-# IBM watsonx — server-side only, NEVER prefix with VITE_
-WATSONX_API_KEY=<your-ibm-cloud-iam-api-key>
-WATSONX_PROJECT_ID=<your-watsonx-project-id>
-WATSONX_REGION=us-south            # optional, defaults to us-south
-```
-
-> 🔒 `WATSONX_*` secrets are read inside server functions (`process.env`) and never shipped to the browser.
-
-### 3. Apply database migrations
-
-Migrations live in `supabase/migrations/`. They create the `profiles` table (with `research_context jsonb`) and RLS policies. In Lovable Cloud they apply automatically; for self-hosted run:
-
-```bash
-supabase db push
-```
-
-### 4. Run
-
-```bash
 bun run dev          # http://localhost:5173
 bun run build        # production build (Cloudflare Worker target)
 bun run preview      # preview the built app
 ```
 
----
+## License
 
-## 🔐 Authentication & data model
-
-- **Sign-in:** email OTP via `supabase.auth.signInWithOtp`. No passwords, no Google OAuth required.
-- **Session guard:** the `_authenticated` layout route checks the Supabase session in `beforeLoad` and redirects unauthenticated users to `/login`.
-- **Roles:** stored client-side as part of the session (student / phd / pm / researcher). For privileged roles in production, follow the [user-roles pattern](https://docs.lovable.dev) — a separate `user_roles` table with a `has_role()` security-definer function. **Never store roles on the profiles table.**
-- **Profiles table:**
-
-  ```sql
-  create table public.profiles (
-    id uuid primary key references auth.users(id) on delete cascade,
-    name text,
-    role text,
-    research_context jsonb default '{}'::jsonb,
-    onboarded boolean default false,
-    created_at timestamptz default now()
-  );
-  alter table public.profiles enable row level security;
-
-  create policy "users read own profile"  on public.profiles for select using (auth.uid() = id);
-  create policy "users update own profile" on public.profiles for update using (auth.uid() = id);
-  create policy "users insert own profile" on public.profiles for insert with check (auth.uid() = id);
-  ```
-
----
-
-## 🧠 IBM watsonx integration
-
-All AI calls go through TanStack `createServerFn` handlers in `src/server/watsonx.functions.ts`:
-
-| Function | Purpose |
-|---|---|
-| `askWatsonx({ question, contextChunks, history })` | Grounded Q&A. Builds a system prompt that pins Albert to the supplied chunks and asks for `[n]` citations. |
-| `analyzePaper({ title, text, researchContext })` | Returns `{ relevance: 0–100, tags: string[], excerpt: string }` JSON, scored against the user's research brief. |
-| `fetchPaperFromUrl({ url })` | Server-side fetch. Detects PDF vs HTML, returns either base64 PDF or stripped text. |
-
-Auth flow: `WATSONX_API_KEY` is exchanged for an IAM bearer token (cached in-memory until expiry), then sent to `https://{region}.ml.cloud.ibm.com/ml/v1/text/generation?version=2024-05-29` with `model_id: ibm/granite-3-8b-instruct`.
-
-Swap models by changing one constant in `watsonx.server.ts`.
-
----
-
-## 🎨 Design system
-
-- **Tokens** in `src/styles.css` (oklch). Never write raw color classes (`text-white`, `bg-blue-500`) in components — always use semantic tokens (`bg-primary`, `text-coral`, `bg-paper-deep`, etc.).
-- **Typography** pairs a display serif (headings) with a clean sans (body).
-- **shadcn/ui** primitives are customized via variants, not by overriding colors inline.
-
----
-
-## 🛣 Roadmap
-
-- [ ] Vector embeddings + semantic retrieval (currently keyword overlap chunking)
-- [ ] Multi-paper / cross-paper chat
-- [ ] Page-level citations with PDF viewer pane
-- [ ] Server-side paper persistence (currently `localStorage`)
-- [ ] Shareable read-only library links
-- [ ] Streaming chat responses
-
----
-
-## 🤝 Contributing
-
-PRs welcome. Please:
-
-1. Run `bun run lint` and `bun run format` before committing.
-2. Keep server-only code in `src/server/*.server.ts` — never import these from client components.
-3. Use search-replace for narrow edits; full rewrites for new files only.
-4. Don't edit `src/integrations/supabase/{client,types}.ts` or `src/routeTree.gen.ts` — they're auto-generated.
-
----
-
-## 📜 License
-
-MIT. See `LICENSE`.
-
----
-
-## 🙏 Acknowledgements
-
-- **IBM watsonx** — Granite-3 model family for grounded reasoning.
-- **Lovable Cloud** — managed Postgres + Auth.
-- **TanStack** — Start, Router, Query.
-- **shadcn/ui** + **Radix UI** — accessible component primitives.
-- **pdfjs-dist** — Mozilla's PDF parser.
-
-Built as a hackathon project. Albert is named after the patron saint of slow, careful reading.
+MIT.
