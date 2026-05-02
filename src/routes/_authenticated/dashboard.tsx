@@ -65,6 +65,7 @@ function Dashboard() {
   const { papers } = usePapers();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [tick, setTick] = useState(0);
   const [sort, setSort] = useState<SortKey>("relevance");
   const [tagFilter, setTagFilter] = useState<string>("all");
