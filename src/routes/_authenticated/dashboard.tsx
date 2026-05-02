@@ -180,14 +180,13 @@ function Dashboard() {
                 </p>
               </div>
               <Button
-                size="lg"
-                className="gap-2 bg-coral text-accent-foreground shadow-soft hover:bg-coral/90"
+                className="h-14 gap-3 rounded-xl bg-coral px-8 text-lg font-semibold text-accent-foreground shadow-soft hover:bg-coral/90"
                 onClick={() => {
                   const first = papers[0];
                   if (first) navigate({ to: "/papers/$paperId", params: { paperId: first.id } });
                 }}
               >
-                <UserRound className="h-5 w-5" strokeWidth={2} />
+                <UserRound className="!h-7 !w-7" strokeWidth={2.2} />
                 Talk with Albert!
               </Button>
             </div>
