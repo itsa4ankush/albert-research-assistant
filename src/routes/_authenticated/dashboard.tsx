@@ -268,3 +268,108 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
     </div>
   );
 }
+
+const TAG_SUGGESTIONS = [
+  "Review of literature",
+  "Results discussion",
+  "Hypothesis framework",
+  "Idea",
+  "Methodology",
+];
+
+function CustomTagsCell({ paper, tags }: { paper: Paper; tags: string[] }) {
+  const [adding, setAdding] = useState(false);
+  const [value, setValue] = useState("");
+
+  const blank: ResearchDatabaseRow = {
+    paperTitle: paper.title,
+    summary: "",
+    methodologySummary: "",
+    researchApproach: "",
+    outcome: "",
+    researchAlignment: "",
+    relevanceScore: null,
+    comments: "",
+    customTags: [],
+  };
+
+  const commit = (raw: string) => {
+    const t = raw.trim();
+    if (!t) return;
+    const record = paper.researchRecord ?? blank;
+    if (record.customTags.includes(t)) return;
+    updatePaper(paper.id, {
+      researchRecord: { ...record, customTags: [...record.customTags, t] },
+    });
+    setValue("");
+    setAdding(false);
+  };
+
+  const remove = (t: string) => {
+    const record = paper.researchRecord ?? blank;
+    updatePaper(paper.id, {
+      researchRecord: {
+        ...record,
+        customTags: record.customTags.filter((x) => x !== t),
+      },
+    });
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {tags.map((t) => (
+        <span
+          key={t}
+          className="inline-flex items-center gap-1 rounded-full bg-coral/15 px-2 py-0.5 text-xs font-medium text-foreground"
+        >
+          {t}
+          <button
+            type="button"
+            onClick={() => remove(t)}
+            className="rounded-full text-muted-foreground hover:text-destructive"
+            aria-label={`Remove ${t}`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+      {adding ? (
+        <Input
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => {
+            commit(value);
+            setAdding(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(value);
+            } else if (e.key === "Escape") {
+              setValue("");
+              setAdding(false);
+            }
+          }}
+          list={`tag-suggestions-${paper.id}`}
+          placeholder="e.g. Review of literature"
+          className="h-7 w-[180px] text-xs"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:border-coral hover:text-foreground"
+        >
+          <Plus className="h-3 w-3" />
+          Add custom tag
+        </button>
+      )}
+      <datalist id={`tag-suggestions-${paper.id}`}>
+        {TAG_SUGGESTIONS.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
+    </div>
+  );
+}
