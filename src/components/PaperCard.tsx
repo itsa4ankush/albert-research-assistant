@@ -52,9 +52,7 @@ export function PaperCard({
       const relevantChunks = pickRelevantChunks(question, paper.chunks, 3);
       
       const result = await askWatsonx({
-        question: question.trim(),
-        contextChunks: relevantChunks,
-        history: [],
+        data: { question: question.trim(), contextChunks: relevantChunks, history: [] },
       });
 
       if (result.error) {
