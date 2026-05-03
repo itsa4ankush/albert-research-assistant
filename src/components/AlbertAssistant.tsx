@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { usePapers } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { askWatsonx } from "@/server/watsonx.functions";
+import { askWatsonx } from "@/functions/watsonx.functions";
 import {
   Sheet,
   SheetContent,
@@ -149,7 +149,7 @@ export function AlbertAssistant({
 
       // Combine context
       const contextChunks = [
-        `RESEARCHER PROFILE:\nName: ${profile?.name || "Unknown"}\nResearch Context: ${profile?.researchContext?.topic || "Not specified"}`,
+        `RESEARCHER PROFILE:\nName: ${profile?.display_name || "Unknown"}\nResearch Context: ${profile?.research_context?.topic || "Not specified"}`,
         dbSummary,
         ...relevantChunks,
       ];

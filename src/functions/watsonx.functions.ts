@@ -234,10 +234,10 @@ function stripHtml(html: string): string {
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, '"')
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -300,3 +300,5 @@ export const fetchPaperFromUrl = createServerFn({ method: "POST" })
       return { ok: false as const, error: message };
     }
   });
+
+// Made with Bob

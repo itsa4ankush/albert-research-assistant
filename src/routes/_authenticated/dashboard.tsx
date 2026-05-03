@@ -5,10 +5,21 @@ import { useAuth } from "@/lib/auth";
 import { PaperCard, PaperCardSkeleton } from "@/components/PaperCard";
 import { UploadPaperDialog } from "@/components/UploadPaperDialog";
 import { AlbertAssistant } from "@/components/AlbertAssistant";
-import { updatePaper } from "@/lib/store";
+import { updatePaper, deletePaper } from "@/lib/store";
+import { getAllPapers } from "@/lib/csv-store";
 import { Input } from "@/components/ui/input";
-import { X, UserRound } from "lucide-react";
+import { X, UserRound, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -65,13 +76,24 @@ function blankValue(value: string | number | null | undefined) {
 
 function Dashboard() {
   const { profile, hydrated, profileLoading } = useAuth();
-  const { papers } = usePapers();
+  const { papers, setPapers } = usePapers();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [albertOpen, setAlbertOpen] = useState(false);
   const [tick, setTick] = useState(0);
   const [sort, setSort] = useState<SortKey>("relevance");
   const [tagFilter, setTagFilter] = useState<string>("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [paperToDelete, setPaperToDelete] = useState<Paper | null>(null);
+
+  const handleDeletePaper = () => {
+    if (paperToDelete) {
+      deletePaper(paperToDelete.id);
+      setPapers(getAllPapers());
+      setDeleteDialogOpen(false);
+      setPaperToDelete(null);
+    }
+  };
 
   // Send users who haven't completed onboarding back to /onboarding
   useEffect(() => {
@@ -79,6 +101,16 @@ function Dashboard() {
       navigate({ to: "/onboarding" });
     }
   }, [hydrated, profileLoading, profile, navigate]);
+
+  // Force re-render every 3 seconds while any paper is still analyzing
+  useEffect(() => {
+    const analyzing = papers.some((p) => p.analyzing);
+    if (!analyzing) return;
+    const id = setInterval(() => {
+      setPapers([...getAllPapers()]); // re-read from storage
+    }, 3000);
+    return () => clearInterval(id);
+  }, [papers, setPapers]);
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -203,6 +235,7 @@ function Dashboard() {
                     <TableHead className="min-w-[120px]">Relevance score</TableHead>
                     <TableHead className="min-w-[220px]">Comments</TableHead>
                     <TableHead className="min-w-[180px]">Tags</TableHead>
+                    <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -221,6 +254,19 @@ function Dashboard() {
                         <TableCell>{blankValue(row.comments)}</TableCell>
                         <TableCell>
                           <CustomTagsCell paper={paper} tags={row.customTags} />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setPaperToDelete(paper);
+                              setDeleteDialogOpen(true);
+                            }}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -253,6 +299,26 @@ function Dashboard() {
 
       <UploadPaperDialog open={open} onOpenChange={setOpen} />
       <AlbertAssistant open={albertOpen} onOpenChange={setAlbertOpen} />
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Paper?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{paperToDelete?.title}"? This will remove the paper and all its research data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePaper}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

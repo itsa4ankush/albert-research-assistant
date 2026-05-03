@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { isDemoUser, saveDemoProfile, useAuth, type ResearchContext } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { upsertResearcher } from "@/lib/csv-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,19 +63,16 @@ function OnboardingPage() {
       navigate({ to: "/dashboard" });
       return;
     }
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: name.trim(),
-        research_context: ctx,
-        onboarded: true,
-      })
-      .eq("id", user.id);
+    upsertResearcher({
+      id: user.id,
+      email: user.email ?? null,
+      display_name: name.trim(),
+      role: profile?.role ?? null,
+      interests: profile?.interests ?? null,
+      onboarded: true,
+      research_context: ctx,
+    });
     setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     await refreshProfile();
     navigate({ to: "/dashboard" });
   };

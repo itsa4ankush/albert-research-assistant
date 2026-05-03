@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import type { Paper, ChatMessage } from "@/lib/types";
 import { getChat, saveChat } from "@/lib/store";
 import { pickRelevantChunks } from "@/lib/pdf";
-import { askWatsonx } from "@/server/watsonx.functions";
+import { askWatsonx } from "@/functions/watsonx.functions";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 

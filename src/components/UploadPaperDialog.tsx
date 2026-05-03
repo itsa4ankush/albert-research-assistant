@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { parsePdf, chunkText } from "@/lib/pdf";
 import { savePaper, updatePaper } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { analyzePaper, fetchPaperFromUrl } from "@/server/watsonx.functions";
+import { analyzePaper, fetchPaperFromUrl } from "@/functions/watsonx.functions";
 import type { ResearchDatabaseRow } from "@/lib/types";
 import {
   Dialog,
@@ -50,6 +50,7 @@ export function UploadPaperDialog({
 
   // Run AI analysis after the paper is saved; non-blocking from the user's POV.
   const runAnalysis = async (id: string, title: string, text: string) => {
+    console.log("[Albert] Starting analysis for:", title);
     try {
       const result = await analyzePaper({
         data: {
@@ -58,6 +59,7 @@ export function UploadPaperDialog({
           researchContext: ctx,
         },
       });
+      console.log("[Albert] Analysis result:", result);
       
       // Update paper with all analysis results
       updatePaper(id, {
@@ -78,8 +80,9 @@ export function UploadPaperDialog({
           customTags: [],
         },
       });
+      console.log("[Albert] Paper updated in storage.");
     } catch (err) {
-      console.error("analyzePaper error", err);
+      console.error("[Albert] analyzePaper error", err);
       updatePaper(id, { analyzing: false });
     }
   };

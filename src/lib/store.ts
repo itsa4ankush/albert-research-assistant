@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Session, Paper, ChatMessage } from "./types";
+import { getAllPapers, upsertPaper, deletePaper as csvDeletePaper, updatePaperFields } from "./csv-store";
 
 const SESSION_KEY = "albert.session";
 const PAPERS_KEY = "albert.papers";
@@ -61,33 +62,26 @@ export function useSession() {
 // --- papers ---
 
 export function getPapers(): Paper[] {
-  return read<Paper[]>(PAPERS_KEY, []);
+  return getAllPapers();
 }
 
 export function savePaper(p: Paper) {
-  const all = getPapers();
-  const next = [p, ...all.filter((x) => x.id !== p.id)];
-  write(PAPERS_KEY, next);
+  upsertPaper(p);
 }
 
 export function deletePaper(id: string) {
-  write(
-    PAPERS_KEY,
-    getPapers().filter((p) => p.id !== id)
-  );
+  csvDeletePaper(id);
   const chats = getAllChats();
   delete chats[id];
   write(CHATS_KEY, chats);
 }
 
 export function updatePaper(id: string, patch: Partial<Paper>) {
-  const all = getPapers();
-  const next = all.map((p) => (p.id === id ? { ...p, ...patch } : p));
-  write(PAPERS_KEY, next);
+  updatePaperFields(id, patch);
 }
 
 export function getPaper(id: string): Paper | undefined {
-  return getPapers().find((p) => p.id === id);
+  return getAllPapers().find((p) => p.id === id);
 }
 
 export function usePapers() {
@@ -95,16 +89,16 @@ export function usePapers() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setPapers(getPapers());
+    setPapers(getAllPapers());
     setHydrated(true);
     const onStorage = (e: StorageEvent) => {
-      if (!e.key || e.key === PAPERS_KEY) setPapers(getPapers());
+      if (!e.key || e.key === "albert.csv.papers") setPapers(getAllPapers());
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  return { papers, hydrated };
+  return { papers, hydrated, setPapers };
 }
 
 // --- chats ---

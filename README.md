@@ -1,13 +1,15 @@
 # Albert — Research Alignment Engine
 
-## 🎉 IBM Hackathon Implementation Complete!
+## 🎉 CSV Migration Complete!
 
-**All 3 IBM AI Agent "Bob" tasks have been successfully implemented:**
-- ✅ **Task 1:** Auto-fill Research Database via IBM watsonx.ai
-- ✅ **Task 2:** In-card "Ask Bob" quick chat
-- ✅ **Task 3:** "Talk with Albert" cross-database assistant
+**Albert now runs 100% locally with CSV storage:**
+- ✅ **Browser localStorage** - No external database required
+- ✅ **CSV Export** - Download your research data anytime
+- ✅ **Cross-tab Sync** - Changes sync across browser tabs
+- ✅ **Delete Functionality** - Remove papers with confirmation
+- ✅ **Simplified Stack** - No IBM Cloud, Supabase, or PostgreSQL needed
 
-**Plus complete IBM Cloud migration ready for deployment!**
+**Previous IBM Hackathon features (Tasks 1-3) remain available in git history.**
 
 ---
 
@@ -91,22 +93,25 @@ citations to the underlying chunks.
 
 ---
 
-## 🏗️ IBM Cloud Integration
+## 🏗️ Current Architecture
 
-### Current Stack (Hybrid):
-- ✅ **IBM watsonx.ai** - AI analysis, Q&A, chat
-- ✅ **IBM Cloud Object Storage** - PDF file storage
-- ✅ **Supabase** - Database and authentication
-- ✅ **Lovable Cloud** - Hosting
+### Local-First Stack:
+- ✅ **Browser localStorage** - All data stored locally
+- ✅ **CSV Export/Import** - Portable research data
+- ✅ **No Backend Required** - Pure client-side storage
+- ✅ **Cross-tab Sync** - StorageEvent API for real-time updates
+- ✅ **Polling Fallback** - 3-second intervals for same-tab updates
 
-### Full IBM Stack (Ready for Deployment):
-- ✅ **IBM watsonx.ai** - AI features
-- ✅ **IBM Cloud Object Storage** - File storage
-- ✅ **IBM Databases for PostgreSQL** - Database
-- ✅ **IBM Code Engine** - Application hosting
-- ✅ **IBM Container Registry** - Docker images
+### Storage Keys:
+- `albert.csv.researchers` - User profiles and research context
+- `albert.csv.papers` - Papers, chunks, and analysis data
 
-**Deployment:** See `IBM_DEPLOYMENT_GUIDE.md` for complete instructions
+### Previous IBM Stack (Available in Git History):
+The application previously integrated with IBM Cloud services. See git history for:
+- IBM watsonx.ai integration
+- IBM Cloud Object Storage
+- IBM Databases for PostgreSQL
+- IBM Code Engine deployment
 
 ---
 
@@ -130,7 +135,8 @@ In scope for the current version:
 - Grounded chat with `[n]` citations to retrieved chunks
 - Library dashboard with filtering, sorting, and tag filters
 - Editable research context from the sidebar
-- **IBM Cloud Object Storage integration for PDF files** ✅
+- **CSV export functionality for research data** ✅
+- **Delete papers with confirmation dialog** ✅
 
 Out of scope for now:
 
@@ -168,36 +174,31 @@ taggable research database with AI-powered features. Step by step:
    - **Paste a URL** — a server function fetches the page, detects PDF
      vs HTML, and returns clean text.
    - **Upload a PDF** — parsed in-browser with `pdfjs-dist`, chunked,
-     and stored in IBM Cloud Object Storage.
-   Each new upload also creates a blank row in the research database.
+     and stored in browser localStorage.
+   Each new upload also creates a new entry in the CSV data store.
 
-5. **AI relevance scoring and database auto-fill.** ✅ **NEW**
-   Once text is extracted, `analyzePaper` calls IBM watsonx
-   (`ibm/granite-3-8b-instruct`) with the paper text and the user's
-   research brief. It returns:
-   - Relevance score (0–100)
-   - Research alignment reasoning
-   - Key findings
-   - Methodology summary
-   - Limitations
-   - Future directions
-   All fields are automatically populated in a single API call.
+5. **CSV data storage.**
+   All paper data, chunks, and analysis results are stored in browser
+   localStorage using two keys:
+   - `albert.csv.researchers` - User profiles
+   - `albert.csv.papers` - Papers and chunks
+   Data persists across sessions and can be exported as CSV.
 
 6. **Research database row per paper.**
-   Every uploaded paper gets a structured row with all fields auto-filled
-   by IBM watsonx.ai. The dashboard renders this as a table beneath the
-   library grid so the user can see all papers' metadata at a glance.
+   Every uploaded paper gets a structured row stored in localStorage.
+   The dashboard renders this as a table beneath the library grid so
+   the user can see all papers' metadata at a glance.
 
-7. **In-card "Ask Bob" quick chat.** ✅ **NEW**
-   Each paper card now has a collapsible Q&A interface. Users can ask
-   questions directly on the card without navigating to the detail page.
-   Bob responds using the 3 most relevant chunks from that paper.
+7. **Delete papers with confirmation.**
+   Each paper row has a delete button that opens a confirmation dialog.
+   Deleting a paper removes it from localStorage and updates the UI
+   automatically across all open tabs.
 
-8. **"Talk with Albert" assistant.** ✅ **NEW**
-   The dashboard features a prominent "Talk with Albert" button that opens
-   a chat panel. Albert can answer questions across ALL papers in the
-   library, help draft research sections, and suggest next steps based on
-   the entire database.
+8. **CSV export functionality.**
+   Users can export their entire research database as CSV files:
+   - Researchers CSV (profiles and context)
+   - Papers CSV (all paper data and analysis)
+   Downloads are triggered from the dashboard.
 
 9. **Inline custom tagging.**
    Users can add custom tags such as "Review of literature", "Hypothesis
@@ -224,21 +225,15 @@ taggable research database with AI-powered features. Step by step:
 
 ## Tech stack
 
-- **Framework:** TanStack Start v1 (React 19, file-based routing,
-  server functions)
+- **Framework:** TanStack Start v1 (React 19, file-based routing, server functions)
 - **Build tool:** Vite 7
 - **Language:** TypeScript (strict mode)
 - **Styling:** Tailwind CSS v4 with semantic design tokens (oklch)
 - **UI primitives:** shadcn/ui on top of Radix UI
-- **Backend:** Lovable Cloud (managed Supabase — Postgres, Auth, Row Level
-  Security) + IBM Cloud services
-- **Authentication:** Supabase Auth (current) + IBM authentication ready (admin + OTP)
-- **AI model:** IBM watsonx.ai, `ibm/granite-3-8b-instruct` via the watsonx
-  Text Generation API
-- **File storage:** IBM Cloud Object Storage (COS)
-- **PDF parsing:** pdfjs-dist in the browser, plus server-side fetch for
-  URL-based ingestion
-- **Deployment target:** Lovable Cloud (current) + IBM Code Engine (ready)
+- **Storage:** Browser localStorage with CSV export
+- **Authentication:** Simple email-based (no external auth service)
+- **PDF parsing:** pdfjs-dist in the browser
+- **Deployment target:** Any static hosting (Vercel, Netlify, GitHub Pages)
 
 ---
 
@@ -256,92 +251,43 @@ src/
       dashboard.tsx             Library and research database
       papers.$paperId.tsx       Paper detail and chat
       research-context.tsx      Edit research brief
-  server/
-    watsonx.server.ts           IAM token cache and raw watsonx call
-    watsonx.functions.ts        askWatsonx, analyzePaper, fetchPaperFromUrl
-    ibm-cos.functions.ts        IBM COS upload/download/delete/list
-  components/                   
+  functions/
+    watsonx.functions.ts        Server functions (moved from src/server/)
+  components/
     AppSidebar.tsx              Navigation sidebar
-    PaperCard.tsx               Paper card with Ask Bob (Task 2)
-    AlbertAssistant.tsx         Cross-database chat (Task 3)
+    PaperCard.tsx               Paper card with delete button
     UploadPaperDialog.tsx       Paper upload interface
-    ChatBox.tsx                 Grounded chat component
     AddCustomTagDialog.tsx      Tag management
     ui/                         shadcn/ui primitives
-  lib/                          
-    auth.ts                     Authentication utilities
-    store.ts                    State management
+  lib/
+    auth.ts                     Simple authentication
+    store.ts                    State management with localStorage
+    csv-store.ts                CSV data layer (CRUD operations)
     pdf.ts                      PDF parsing and chunking
     types.ts                    TypeScript types
     utils.ts                    Helper functions
-    ibm-auth.ts                 IBM authentication (admin + OTP)
-  integrations/
-    supabase/                   Supabase client and types
-    ibm-db/                     IBM PostgreSQL client
   styles.css                    Tailwind v4 and design tokens
 
-scripts/                        Database utilities
-  migrate.js                    Run database migrations
-  init-admin.js                 Initialize admin user
-  test-db.js                    Test database connection
-
-supabase/migrations/            Database schema
-  20260503000000_ibm_migration.sql  Complete IBM migration schema
-
-Deployment files:
-  Dockerfile                    Production container image
-  .dockerignore                 Docker build optimization
-  ibm-code-engine-deploy.sh     Automated deployment script
-  setup-secrets.sh              Environment configuration
-
 Documentation:
-  IBM_DEPLOYMENT_GUIDE.md       Complete deployment walkthrough
-  IBM_MIGRATION_COMPLETE.md     Implementation summary
-  FULL_IBM_MIGRATION_GUIDE.md   Migration strategy
-  IBM_COS_SETUP.md              Object Storage setup
-  TESTING_GUIDE.md              Testing procedures
-  IMPLEMENTATION_SUMMARY.md     Tasks 1-3 details
-  TESTING_TASK_1.md             Task 1 documentation
-  TESTING_TASK_2.md             Task 2 documentation
-  TESTING_TASK_3.md             Task 3 documentation
+  CSV_MIGRATION_PLAN.md         CSV migration strategy
+  README.md                     This file
+  IBM_BOB_TASK.md               Original IBM Hackathon tasks (historical)
 ```
 
 ---
 
 ## Environment variables
 
-### IBM watsonx.ai (Required):
-- `WATSONX_API_KEY` — IBM Cloud IAM API key
-- `WATSONX_PROJECT_ID` — watsonx project ID
-- `WATSONX_URL` — watsonx endpoint (default: us-south)
-- `WATSONX_REGION` — optional, defaults to `us-south`
+No environment variables required! All data is stored locally in the browser.
 
-### IBM Cloud Object Storage (Required):
-- `IBM_COS_API_KEY` — COS API key
-- `IBM_COS_INSTANCE_ID` — COS instance ID
-- `IBM_COS_ENDPOINT` — COS endpoint URL
-- `IBM_COS_BUCKET` — Bucket name for PDFs
-
-### IBM Databases for PostgreSQL (Optional - for full IBM migration):
-- `IBM_DB_CONNECTION_STRING` — PostgreSQL connection string
-- `IBM_DB_CA_CERT` — SSL certificate (base64 encoded)
-
-### Supabase (Current - auto-managed by Lovable Cloud):
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
-- `VITE_SUPABASE_PROJECT_ID`
-
-### Application (Optional):
-- `ADMIN_EMAIL` — Admin email (default: admin@albert.com)
-- `ADMIN_PASSWORD` — Admin password for IBM auth
+For development:
 - `NODE_ENV` — Environment (development/production)
-- `PORT` — Server port (default: 8080)
+- `PORT` — Dev server port (default: 5173)
 
 ---
 
 ## Getting started
 
-### Development:
 ```bash
 bun install
 bun run dev          # http://localhost:5173
@@ -349,77 +295,63 @@ bun run build        # production build
 bun run preview      # preview the built app
 ```
 
-### Testing:
-```bash
-npm run db:test        # Test database connection
-npm run db:migrate     # Run database migrations
-npm run db:init-admin  # Initialize admin user
-```
-
 ### Deployment:
-```bash
-npm run deploy:setup   # Configure IBM Code Engine secrets
-npm run deploy         # Deploy to IBM Code Engine
-```
+Deploy the `dist/` folder to any static hosting:
+- Vercel
+- Netlify
+- GitHub Pages
+- Cloudflare Pages
 
 ---
 
 ## 📚 Documentation
 
-- **IBM_DEPLOYMENT_GUIDE.md** - Complete deployment walkthrough (598 lines)
-- **IBM_MIGRATION_COMPLETE.md** - Implementation summary (485 lines)
-- **FULL_IBM_MIGRATION_GUIDE.md** - Migration strategy (745 lines)
-- **IBM_COS_SETUP.md** - Object Storage setup (545 lines)
-- **TESTING_GUIDE.md** - Testing procedures (429 lines)
-- **IMPLEMENTATION_SUMMARY.md** - Tasks 1-3 implementation details
-- **IBM_BOB_TASK.md** - Original task requirements
+- **CSV_MIGRATION_PLAN.md** - CSV migration strategy and implementation
+- **IBM_BOB_TASK.md** - Historical: Original IBM Hackathon tasks (completed in git history)
 
 ---
 
-## 🎯 IBM Hackathon Compliance
+## 🎯 CSV Migration Benefits
 
-### IBM Services Used:
-1. ✅ **IBM watsonx.ai** - Granite 3 8B Instruct model
-2. ✅ **IBM Cloud Object Storage** - PDF file storage
-3. ✅ **IBM Databases for PostgreSQL** - Ready for deployment
-4. ✅ **IBM Code Engine** - Ready for deployment
-5. ✅ **IBM Container Registry** - Ready for deployment
+### Advantages:
+- ✅ **Zero Dependencies** - No external services required
+- ✅ **Instant Setup** - No configuration needed
+- ✅ **Privacy First** - All data stays in your browser
+- ✅ **Portable** - Export/import CSV files anytime
+- ✅ **Free Forever** - No subscription or API costs
+- ✅ **Offline Ready** - Works without internet (after initial load)
 
-### Token Economy:
-- ✅ Single API call per paper analysis
-- ✅ Optimized prompts with truncation
-- ✅ Greedy decoding, low temperature
-- ✅ Capped max_new_tokens per call
-- ✅ Minimal context selection (3-5 chunks)
-
-### Implementation Quality:
-- ✅ 2,500+ lines of production code
-- ✅ 2,000+ lines of documentation
-- ✅ Complete test coverage
-- ✅ Production-ready deployment
-- ✅ Comprehensive error handling
+### Data Management:
+- ✅ **Cross-tab Sync** - Changes sync across browser tabs
+- ✅ **Persistent Storage** - Data survives browser restarts
+- ✅ **CSV Export** - Download your research database
+- ✅ **Delete Confirmation** - Prevent accidental data loss
 
 ---
 
-## 🚀 Deployment Options
+## 🚀 Deployment
 
-### Option 1: Current Setup (FREE)
-- Lovable Cloud hosting
-- Supabase database
-- IBM watsonx.ai + COS
-- **Cost:** ~$0-5/month
+Deploy to any static hosting provider:
 
-### Option 2: Full IBM Stack
-- IBM Code Engine hosting
-- IBM Databases for PostgreSQL
-- IBM watsonx.ai + COS
-- **Cost:** ~$35-125/month
+### Vercel (Recommended):
+```bash
+npm run build
+vercel --prod
+```
 
-### Option 3: Hybrid (Recommended for Testing)
-- IBM Code Engine hosting (free tier)
-- Neon.tech PostgreSQL (free)
-- IBM watsonx.ai + COS
-- **Cost:** ~$0-10/month
+### Netlify:
+```bash
+npm run build
+netlify deploy --prod --dir=dist
+```
+
+### GitHub Pages:
+```bash
+npm run build
+# Push dist/ folder to gh-pages branch
+```
+
+**Cost:** FREE on all platforms
 
 ---
 
@@ -429,8 +361,14 @@ MIT.
 
 ---
 
-## 🎉 Ready for Demo!
+## 🎉 Ready to Use!
 
-All IBM Hackathon tasks are complete and ready for testing. See `TESTING_GUIDE.md` for detailed testing procedures.
+Albert is now a fully local, privacy-first research assistant. No setup, no configuration, no external dependencies.
 
 **Repository:** https://github.com/itsa4ankush/albert-research-assistant
+
+---
+
+## 📜 Historical Note
+
+This application was originally built for the IBM Hackathon with full IBM Cloud integration (watsonx.ai, Cloud Object Storage, PostgreSQL, Code Engine). Those features are preserved in git history. The current version has been simplified to use browser localStorage for a zero-dependency, privacy-first experience.

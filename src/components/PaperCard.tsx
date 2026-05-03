@@ -5,7 +5,7 @@ import { Trash2, Loader2, MessageSquare, Send, ChevronDown, ChevronUp } from "lu
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { pickRelevantChunks } from "@/lib/pdf";
-import { askWatsonx } from "@/server/watsonx.functions";
+import { askWatsonx } from "@/functions/watsonx.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 

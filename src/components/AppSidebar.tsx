@@ -14,7 +14,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Library, MessageSquare, Pencil, LogOut } from "lucide-react";
+import { Library, MessageSquare, Pencil, LogOut, Download } from "lucide-react";
+import { exportResearchersCSV, exportPapersCSV } from "@/lib/csv-store";
 
 const NAV = [
   { title: "Library", url: "/dashboard", icon: Library },
@@ -136,6 +137,22 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
+          {!collapsed && (
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={exportPapersCSV}>
+                  <Download className="h-4 w-4" />
+                  <span>Export Papers CSV</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={exportResearchersCSV}>
+                  <Download className="h-4 w-4" />
+                  <span>Export Researchers CSV</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />

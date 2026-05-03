@@ -1,3 +1,4 @@
+// src/functions/watsonx.server.ts
 // Server-only watsonx helpers. Never import this file from client code.
 
 const IAM_URL = "https://iam.cloud.ibm.com/identity/token";
@@ -84,3 +85,5 @@ export async function generateText(
   const text = json.results?.[0]?.generated_text ?? "";
   return { text, raw: json };
 }
+
+// Made with Bob
