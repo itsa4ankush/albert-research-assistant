@@ -1,5 +1,11 @@
 # Albert — Research Alignment Engine
 
+> **📦 Submission Deliverable:** All Bob session logs and task screenshots are available in the `Submission Deliverable/bob_sessions/` folder.
+
+> **⚠️ Performance Note:** AI responses may be delayed when processing large documents or during periods of high token usage. Please allow extra time for analysis of lengthy papers.
+
+---
+
 ## 🎉 CSV Migration Complete!
 
 **Albert now runs 100% locally with CSV storage:**
