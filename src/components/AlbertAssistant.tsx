@@ -161,9 +161,7 @@ export function AlbertAssistant({
       }));
 
       const result = await askWatsonx({
-        question: input.trim(),
-        contextChunks,
-        history,
+        data: { question: input.trim(), contextChunks, history },
       });
 
       const assistantMessage: Message = {
