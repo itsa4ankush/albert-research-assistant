@@ -4,6 +4,7 @@ import { usePapers } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { PaperCard, PaperCardSkeleton } from "@/components/PaperCard";
 import { UploadPaperDialog } from "@/components/UploadPaperDialog";
+import { AlbertAssistant } from "@/components/AlbertAssistant";
 import { updatePaper } from "@/lib/store";
 import { Input } from "@/components/ui/input";
 import { X, UserRound } from "lucide-react";
@@ -67,6 +68,7 @@ function Dashboard() {
   const { papers } = usePapers();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [albertOpen, setAlbertOpen] = useState(false);
   const [tick, setTick] = useState(0);
   const [sort, setSort] = useState<SortKey>("relevance");
   const [tagFilter, setTagFilter] = useState<string>("all");
@@ -181,10 +183,7 @@ function Dashboard() {
               </div>
               <Button
                 className="group h-14 gap-3 rounded-xl bg-coral px-8 text-lg font-semibold text-accent-foreground shadow-soft transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-coral hover:shadow-[0_14px_36px_-10px_var(--coral),0_0_0_4px_color-mix(in_oklab,var(--coral)_25%,transparent)] focus-visible:-translate-y-1 focus-visible:shadow-[0_14px_36px_-10px_var(--coral),0_0_0_4px_color-mix(in_oklab,var(--coral)_35%,transparent)] active:translate-y-0"
-                onClick={() => {
-                  const first = papers[0];
-                  if (first) navigate({ to: "/papers/$paperId", params: { paperId: first.id } });
-                }}
+                onClick={() => setAlbertOpen(true)}
               >
                 <UserRound className="!h-7 !w-7 transition-transform duration-300 group-hover:scale-110 group-focus-visible:scale-110" strokeWidth={2.2} />
                 Talk with Albert!
@@ -253,6 +252,7 @@ function Dashboard() {
       )}
 
       <UploadPaperDialog open={open} onOpenChange={setOpen} />
+      <AlbertAssistant open={albertOpen} onOpenChange={setAlbertOpen} />
     </main>
   );
 }

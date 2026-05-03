@@ -58,12 +58,25 @@ export function UploadPaperDialog({
           researchContext: ctx,
         },
       });
+      
+      // Update paper with all analysis results
       updatePaper(id, {
         relevanceScore: result.relevance,
         tags: result.tags,
         excerpt: result.excerpt,
         keywords: result.keywords,
         analyzing: false,
+        researchRecord: {
+          paperTitle: title,
+          summary: result.summary || "",
+          methodologySummary: result.methodologySummary || "",
+          researchApproach: result.researchApproach || "",
+          outcome: result.outcome || "",
+          researchAlignment: result.researchAlignment || "",
+          relevanceScore: result.relevanceScore ?? null,
+          comments: "",
+          customTags: [],
+        },
       });
     } catch (err) {
       console.error("analyzePaper error", err);

@@ -90,41 +90,103 @@ export const analyzePaper = createServerFn({ method: "POST" })
   .inputValidator((data) => analyzeSchema.parse(data))
   .handler(async ({ data }) => {
     const ctx = data.researchContext ?? {};
-    const ctxBlock = [
-      ctx.topic && `Topic: ${ctx.topic}`,
-      ctx.background && `Background: ${ctx.background}`,
-      ctx.problem && `Problem: ${ctx.problem}`,
-      ctx.outcome && `Expected outcome: ${ctx.outcome}`,
-      ctx.other && `Other: ${ctx.other}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    
+    // Build context block with proper formatting
+    const topicLine = ctx.topic ? `Topic:            ${ctx.topic}` : "Topic:            (not specified)";
+    const backgroundLine = ctx.background ? `Background:       ${ctx.background}` : "Background:       (not specified)";
+    const problemLine = ctx.problem ? `Problem:          ${ctx.problem}` : "Problem:          (not specified)";
+    const outcomeLine = ctx.outcome ? `Expected Outcome: ${ctx.outcome}` : "Expected Outcome: (not specified)";
+    const otherLine = ctx.other ? `Additional Notes: ${ctx.other}` : "Additional Notes: (none)";
 
     const prompt = [
-      "You are Albert, a research assistant. Analyse the given paper for a researcher with this context:",
-      ctxBlock || "(No research context — score relevance generically.)",
+      "You are Albert, a precise academic research assistant.",
       "",
-      `PAPER TITLE: ${data.title}`,
-      "PAPER TEXT (truncated):",
+      "Your task: analyze the paper below against the researcher's specific context and return structured JSON.",
+      "",
+      "═══════════════════════════════",
+      "RESEARCHER CONTEXT",
+      "═══════════════════════════════",
+      topicLine,
+      backgroundLine,
+      problemLine,
+      outcomeLine,
+      otherLine,
+      "",
+      "═══════════════════════════════",
+      "PAPER",
+      "═══════════════════════════════",
+      `Title: ${data.title}`,
+      "",
       data.text.slice(0, 12000),
       "",
-      'Respond with ONLY a JSON object, no prose, matching: {"relevance": <integer 0-100>, "tags": [<3-5 short topic tags, lowercase, kebab-case>], "excerpt": "<1-2 sentence plain-language summary, max 220 chars>", "keywords": [<6-12 short keywords or noun-phrases, lowercase, that BOTH appear-in-or-paraphrase the paper AND match the researcher\'s topic/background/problem/outcome above; these will be used as retrieval keywords for RAG, so prefer specific technical terms over generic words>]}.',
+      "═══════════════════════════════",
+      "INSTRUCTIONS",
+      "═══════════════════════════════",
+      "Return ONLY a single valid JSON object. No prose, no markdown, no code fences.",
+      "",
+      "Reasoning order (internal, not output):",
+      "1. Read the paper and identify its core contribution, method, and findings.",
+      "2. Cross-reference each element of the researcher's context against the paper.",
+      "3. Derive relevanceScore (0–100) from that alignment — high score requires direct overlap on topic, problem, AND expected outcome; partial overlap scores 40–69; tangential scores below 40.",
+      "4. Populate every field below from steps 1–3.",
+      "",
+      "JSON schema (all strings unless noted):",
+      "{",
+      '  "summary": "Formal overview of the paper\'s contribution and findings. ≤500 words.",',
+      '  "methodologySummary": "Methods, techniques, datasets, and experimental setup used. ≤500 words.",',
+      '  "researchApproach": "One of: empirical | theoretical | survey | mixed | design-science — then a ≤500-word explanation of how the paper applies that approach.",',
+      '  "outcome": "Key results, metrics, and conclusions. Be specific — cite numbers if present. ≤500 words.",',
+      '  "researchAlignment": "Explain, field by field, how this paper relates to the researcher\'s Topic, Background, Problem, and Expected Outcome. Identify gaps where the paper does not address the researcher\'s needs. ≤500 words.",',
+      '  "relevanceScore": <integer 0–100, must be numerically consistent with researchAlignment>,',
+      '  "tags": ["3–5 lowercase kebab-case topic tags derived from the paper content"],',
+      '  "excerpt": "1–2 sentence plain-language summary a non-expert can understand. ≤220 characters.",',
+      '  "keywords": ["6–12 lowercase retrieval keywords that appear in both the paper AND the researcher\'s context"]',
+      "}",
+      "",
+      "Hard rules:",
+      "- relevanceScore must reflect the strength described in researchAlignment. Contradictions are invalid.",
+      "- excerpt must be ≤220 characters. Count carefully.",
+      "- keywords must appear in the paper text — no invented terms.",
+      '- Do not pad fields. Omit filler phrases like "the paper explores", "this study aims to", "it is worth noting".',
+      "- If the paper is only tangentially related to the researcher's context, say so explicitly in researchAlignment and score accordingly.",
+      "- Output must parse as valid JSON. Escape all inner quotes.",
     ].join("\n");
 
     try {
-      const { text } = await generateText(prompt, { max_new_tokens: 450, temperature: 0.1 });
-      const match = text.match(/\{[\s\S]*\}/);
-      if (!match) {
-        return { relevance: 50, tags: [] as string[], excerpt: data.text.slice(0, 200), keywords: [] as string[], error: null as string | null };
+      const { text } = await generateText(prompt, { max_new_tokens: 2000, temperature: 0.1 });
+      
+      // Extract JSON from response (handle potential markdown code fences or extra text)
+      let jsonText = text.trim();
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
       }
-      const parsed = JSON.parse(match[0]) as {
-        relevance?: number;
+      
+      const parsed = JSON.parse(jsonText) as {
+        summary?: string;
+        methodologySummary?: string;
+        researchApproach?: string;
+        outcome?: string;
+        researchAlignment?: string;
+        relevanceScore?: number;
         tags?: string[];
         excerpt?: string;
         keywords?: string[];
       };
+
+      // Validate and sanitize all fields
+      const relevanceScore = Math.max(0, Math.min(100, Math.round(Number(parsed.relevanceScore ?? 50))));
+      
       return {
-        relevance: Math.max(0, Math.min(100, Math.round(Number(parsed.relevance ?? 50)))),
+        // New research database fields
+        summary: String(parsed.summary ?? "").slice(0, 5000),
+        methodologySummary: String(parsed.methodologySummary ?? "").slice(0, 5000),
+        researchApproach: String(parsed.researchApproach ?? "").slice(0, 5000),
+        outcome: String(parsed.outcome ?? "").slice(0, 5000),
+        researchAlignment: String(parsed.researchAlignment ?? "").slice(0, 5000),
+        relevanceScore,
+        // Existing fields (for backward compatibility)
+        relevance: relevanceScore, // Keep both for consistency
         tags: Array.isArray(parsed.tags)
           ? parsed.tags.slice(0, 6).map((t) => String(t).toLowerCase())
           : [],
@@ -144,7 +206,21 @@ export const analyzePaper = createServerFn({ method: "POST" })
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("analyzePaper failed:", err);
-      return { relevance: 50, tags: [] as string[], excerpt: data.text.slice(0, 200), keywords: [] as string[], error: message };
+      
+      // Return safe fallback values - never crash the upload flow
+      return {
+        summary: "",
+        methodologySummary: "",
+        researchApproach: "",
+        outcome: "",
+        researchAlignment: "",
+        relevanceScore: null,
+        relevance: 50,
+        tags: [] as string[],
+        excerpt: data.text.slice(0, 200),
+        keywords: [] as string[],
+        error: message,
+      };
     }
   });
 
